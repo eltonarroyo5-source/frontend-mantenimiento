@@ -9,13 +9,22 @@ function Tecnicos() {
   }, []);
 
   return (
-    <div>
+    <div className="card">
       <h2>Técnicos</h2>
-      <ul>
-        {tecnicos.map(t => (
-          <li key={t.id}>{t.nombre} - {t.email}</li>
-        ))}
-      </ul>
+      {tecnicos.length === 0 ? (
+        <p className="vacio">No hay técnicos registrados.</p>
+      ) : (
+        <ul className="lista">
+          {tecnicos.map(t => (
+            <li key={t.id} className="item">
+              <div>
+                <div className="titulo">{t.nombre}</div>
+                <div className="detalle">{t.email}{t.telefono ? ` · ${t.telefono}` : ''}</div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

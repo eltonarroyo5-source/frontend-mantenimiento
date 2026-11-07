@@ -11,15 +11,14 @@ const esquema = Yup.object({
 
 function Equipos() {
   const [equipos, setEquipos] = useState([]);
+  const [busqueda, setBusqueda] = useState('');
   const [error, setError] = useState('');
 
   const cargarEquipos = () => {
     api.get('/equipos').then(res => setEquipos(res.data));
   };
 
-  useEffect(() => {
-    cargarEquipos();
-  }, []);
+  useEffect(() => { cargarEquipos(); }, []);
 
   const handleSubmit = async (values, { resetForm }) => {
     setError('');
@@ -42,41 +41,102 @@ function Equipos() {
     }
   };
 
+  const total = equipos.length;
+  const operativos = equipos.filter(e => e.estado === 'operativo').length;
+  const enMant = equipos.filter(e => e.estado === 'en_mantenimiento').length;
+  const inactivos = equipos.filter(e => e.estado === 'inactivo').length;
+
+  const q = busqueda.toLowerCase();
+  const filtrados = equipos.filter(e =>
+    `${e.nombre} ${e.tipo} ${e.ubicacion || ''}`.toLowerCase().includes(q)
+  );
+
   return (
-    <div>
-      <h2>Equipos</h2>
+    <div className="page">
+      <div className="page-head">
+        <div>
+          <h2>Equipos</h2>
+          <p>Administra el inventario y el estado de tus equipos</p>
+        </div>
+      </div>
 
-      <Formik
-        initialValues={{ nombre: '', tipo: '', ubicacion: '' }}
-        validationSchema={esquema}
-        onSubmit={handleSubmit}
-      >
-        <Form style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px' }}>
-          <div>
-            <Field name="nombre" placeholder="Nombre" />
-            <div style={{ color: 'tomato', fontSize: '12px' }}><ErrorMessage name="nombre" /></div>
-          </div>
-          <div>
-            <Field name="tipo" placeholder="Tipo" />
-            <div style={{ color: 'tomato', fontSize: '12px' }}><ErrorMessage name="tipo" /></div>
-          </div>
-          <div>
-            <Field name="ubicacion" placeholder="Ubicación" />
-          </div>
-          <button type="submit">Agregar</button>
-        </Form>
-      </Formik>
+      <div className="stats">
+        <div className="stat">
+          <div className="num">{total}</div>
+          <div className="lbl">Total</div>
+        </div>
+        <div className="stat ok">
+          <div className="num">{operativos}</div>
+          <div className="lbl">Operativos</div>
+        </div>
+        <div className="stat warn">
+          <div className="num">{enMant}</div>
+          <div className="lbl">En mantenimiento</div>
+        </div>
+        <div className="stat bad">
+          <div className="num">{inactivos}</div>
+          <div className="lbl">Inactivos</div>
+        </div>
+      </div>
 
-      {error && <p style={{ color: 'tomato' }}>{error}</p>}
+      <div className="card">
+        <div className="panel-nuevo">
+          <h3>Nuevo equipo</h3>
+          <Formik
+            initialValues={{ nombre: '', tipo: '', ubicacion: '' }}
+            validationSchema={esquema}
+            onSubmit={handleSubmit}
+          >
+            <Form className="form-row">
+              <div className="field">
+                <Field name="nombre" placeholder="Nombre" />
+                <p className="error"><ErrorMessage name="nombre" /></p>
+              </div>
+              <div className="field">
+                <Field name="tipo" placeholder="Tipo" />
+                <p className="error"><ErrorMessage name="tipo" /></p>
+              </div>
+              <div className="field">
+                <Field name="ubicacion" placeholder="Ubicación" />
+              </div>
+              <button type="submit">+ Agregar</button>
+            </Form>
+          </Formik>
+          {error && <p className="error">{error}</p>}
+        </div>
 
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {equipos.map(e => (
-          <li key={e.id} style={{ marginBottom: '8px' }}>
-            {e.nombre} - {e.tipo} ({e.estado}){' '}
-            <button onClick={() => handleEliminar(e.id)}>Eliminar</button>
-          </li>
-        ))}
-      </ul>
+        <div className="lista-head">
+          <h3>Listado <span className="contador">{filtrados.length} de {total}</span></h3>
+          <input
+            className="buscador"
+            placeholder="Buscar por nombre, tipo o ubicación..."
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+          />
+        </div>
+
+        {filtrados.length === 0 ? (
+          <p className="vacio">No se encontraron equipos.</p>
+        ) : (
+          <ul className="lista">
+            {filtrados.map(e => (
+              <li key={e.id} className="item">
+                <div className="item-main">
+                  <div className="avatar">{e.nombre.charAt(0).toUpperCase()}</div>
+                  <div>
+                    <div className="titulo">{e.nombre}</div>
+                    <div className="detalle">{e.tipo}{e.ubicacion ? ` · ${e.ubicacion}` : ''}</div>
+                  </div>
+                </div>
+                <div className="acciones">
+                  <span className={`badge ${e.estado}`}>{e.estado.replace('_', ' ')}</span>
+                  <button className="peligro" onClick={() => handleEliminar(e.id)}>Eliminar</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

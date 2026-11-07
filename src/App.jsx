@@ -1,4 +1,4 @@
-import { Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, NavLink, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import Equipos from './pages/Equipos';
 import Tecnicos from './pages/Tecnicos';
 import Login from './pages/Login';
@@ -9,6 +9,7 @@ function Privada({ children }) {
 
 function App() {
   const navigate = useNavigate();
+    const { pathname } = useLocation();
   const logueado = !!localStorage.getItem('token');
 
   const salir = () => {
@@ -17,21 +18,25 @@ function App() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Mantenimiento ML</h1>
-      {logueado && (
-        <nav style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-          <Link to="/">Equipos</Link>
-          <Link to="/tecnicos">Técnicos</Link>
-          <button onClick={salir}>Cerrar sesión</button>
-        </nav>
+    <>
+            {pathname !== '/login' && (
+        <header className="topbar">
+          <div className="brand">Mantenimiento <span>ML</span></div>
+          {logueado && (
+            <nav className="nav">
+              <NavLink to="/" end>Equipos</NavLink>
+              <NavLink to="/tecnicos">Técnicos</NavLink>
+              <button className="secundario" onClick={salir}>Cerrar sesión</button>
+            </nav>
+          )}
+        </header>
       )}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Privada><Equipos /></Privada>} />
         <Route path="/tecnicos" element={<Privada><Tecnicos /></Privada>} />
       </Routes>
-    </div>
+    </>
   );
 }
 
